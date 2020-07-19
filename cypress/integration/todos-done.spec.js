@@ -1,10 +1,14 @@
 import { makeServer } from '../../src/server'
-
-const TODO_CHECKED_TOGGLE_LABEL = /Todo checked toggle/i
-const TODO_ADD_INPUT_PLACEHOLDER = /What needs to be done?/i
-const TODOS_LIST_LABEL = /Todos/i
-const TODO_EDIT_INPUT_LABEL = /Todo edit/i
-const CLEAR_COMPLETED_NAME = /Clear completed/i
+import {
+  TODO_CHECKED_TOGGLE_LABEL,
+  TODO_ADD_INPUT_PLACEHOLDER,
+  TODOS_LIST_LABEL,
+  TODO_EDIT_INPUT_LABEL,
+  CLEAR_COMPLETED_NAME,
+  ACTIVE_FILTER_LINK,
+  COMPLETED_FILTER_LINK,
+  ALL_FILTER_LINK,
+} from '../support/constants'
 
 let server
 
@@ -135,5 +139,66 @@ it('should clear completed', () => {
 
     cy.findByRole('listitem', { name: buyMilkTodo.title }).should('not.exist')
     cy.findByRole('listitem', { name: doHomeworkTodo.title }).should('exist')
+  })
+})
+
+it('should filter the todos according to "Active" filter', () => {
+  // Arrange
+  const buyMilkTodo = server.create('todo', { title: 'Buy milk', completed: true })
+  const doHomeworkTodo = server.create('todo', { title: 'Do homework', completed: false })
+  const cleanHouseTodo = server.create('todo', { title: 'Clean house', completed: false })
+  cy.visit('/')
+
+  // Act
+  cy.findByRole('link', { name: ACTIVE_FILTER_LINK }).click()
+
+  // Assert
+  cy.findByRole('list', { name: TODOS_LIST_LABEL }).within(() => {
+    cy.root().children().should('have.length', 2)
+
+    cy.findByRole('listitem', { name: buyMilkTodo.title }).should('not.exist')
+    cy.findByRole('listitem', { name: doHomeworkTodo.title }).should('exist')
+    cy.findByRole('listitem', { name: cleanHouseTodo.title }).should('exist')
+  })
+})
+
+it('should filter the todos according to "Completed" filter', () => {
+  // Arrange
+  const buyMilkTodo = server.create('todo', { title: 'Buy milk', completed: true })
+  const doHomeworkTodo = server.create('todo', { title: 'Do homework', completed: false })
+  const cleanHouseTodo = server.create('todo', { title: 'Clean house', completed: false })
+  cy.visit('/')
+
+  // Act
+  cy.findByRole('link', { name: COMPLETED_FILTER_LINK }).click()
+
+  // Assert
+  cy.findByRole('list', { name: TODOS_LIST_LABEL }).within(() => {
+    cy.root().children().should('have.length', 1)
+
+    cy.findByRole('listitem', { name: buyMilkTodo.title }).should('exist')
+    cy.findByRole('listitem', { name: doHomeworkTodo.title }).should('not.exist')
+    cy.findByRole('listitem', { name: cleanHouseTodo.title }).should('not.exist')
+  })
+})
+
+it('should filter the todos according to "All" filter', () => {
+  // Arrange
+  const buyMilkTodo = server.create('todo', { title: 'Buy milk', completed: true })
+  const doHomeworkTodo = server.create('todo', { title: 'Do homework', completed: false })
+  const cleanHouseTodo = server.create('todo', { title: 'Clean house', completed: false })
+  cy.visit('/')
+
+  // Act
+  cy.findByRole('link', { name: COMPLETED_FILTER_LINK }).click()
+  cy.findByRole('link', { name: ALL_FILTER_LINK }).click()
+
+  // Assert
+  cy.findByRole('list', { name: TODOS_LIST_LABEL }).within(() => {
+    cy.root().children().should('have.length', 3)
+
+    cy.findByRole('listitem', { name: buyMilkTodo.title }).should('exist')
+    cy.findByRole('listitem', { name: doHomeworkTodo.title }).should('exist')
+    cy.findByRole('listitem', { name: cleanHouseTodo.title }).should('exist')
   })
 })
